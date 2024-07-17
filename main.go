@@ -9,30 +9,6 @@ import (
 	"github.com/dhanyamolsreedevi1993/ethereum-parser/storage"
 )
 
-func getCurrentBlock(client *rpc.EthereumRPCClient) (int, error) {
-	// Define the Ethereum RPC method for getting the current block number
-	const ethBlockNumberMethod = "eth_blockNumber"
-
-	// Create request parameters
-	params := []interface{}{}
-
-	// Call the RPC method
-	var blockNumber string
-	err := client.Call(ethBlockNumberMethod, params, &blockNumber)
-	if err != nil {
-		return 0, fmt.Errorf("failed to get current block number: %v", err)
-	}
-
-	// Convert block number string to integer
-	return parseIntHex(blockNumber)
-}
-
-func parseIntHex(hex string) (int, error) {
-	// Implement logic to convert hexadecimal string to integer
-	// You can use libraries like "github.com/ethereum/go-ethereum/common/hexutil"
-	return 0, fmt.Errorf("parseIntHex not implemented")
-}
-
 func main() {
 	// Initialize Ethereum parser, RPC client, and storage
 	ethereumParser := parser.NewEthereumParser()
@@ -53,7 +29,7 @@ func main() {
 	fmt.Printf("Current block: %d\n", currentBlock)
 
 	// Simulate fetching transactions for the subscribed address
-	transactions := ethereumParser.GetTransactions(address, memoryStorage)
+	transactions := ethereumParser.GetTransactions(address)
 	fmt.Printf("Transactions for address %s:\n", address)
 	for _, tx := range transactions {
 		fmt.Printf("Hash: %s, From: %s, To: %s, Value: %s, Gas: %s, GasPrice: %s\n",
@@ -62,4 +38,24 @@ func main() {
 
 	// Start REST API server to expose Ethereum parser functionality
 	restapi.StartServer(ethereumParser, memoryStorage)
+}
+
+func getCurrentBlock(rpcClient *rpc.EthereumRPCClient) (int, error) {
+	var blockNumberResult struct {
+		Result string `json:"result"`
+	}
+
+	err := rpcClient.Call("eth_blockNumber", []interface{}{}, &blockNumberResult)
+	if err != nil {
+		return 0, fmt.Errorf("error fetching block number: %v", err)
+	}
+
+	// Convert hex block number to integer
+	var blockNumber int
+	_, err = fmt.Sscanf(blockNumberResult.Result, "0x%x", &blockNumber)
+	if err != nil {
+		return 0, fmt.Errorf("error converting block number: %v", err)
+	}
+
+	return blockNumber, nil
 }

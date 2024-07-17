@@ -1,9 +1,5 @@
 package parser
 
-import (
-	"github.com/dhanyamolsreedevi1993/ethereum-parser/storage_interface"
-)
-
 type Transaction struct {
 	Hash     string
 	From     string
@@ -16,8 +12,7 @@ type Transaction struct {
 type Parser interface {
 	GetCurrentBlock() int
 	Subscribe(address string) bool
-	IsSubscribed(address string) bool
-	GetTransactions(address string, storage storage_interface.Storage) []*Transaction
+	GetTransactions(address string) []*Transaction
 }
 
 type EthereumParser struct {
@@ -32,7 +27,7 @@ func NewEthereumParser() *EthereumParser {
 }
 
 func (ep *EthereumParser) GetCurrentBlock() int {
-	return ep.currentBlock // Not implemented in parser (consider fetching from RPC if needed)
+	return ep.currentBlock
 }
 
 func (ep *EthereumParser) Subscribe(address string) bool {
@@ -40,11 +35,6 @@ func (ep *EthereumParser) Subscribe(address string) bool {
 	return true
 }
 
-func (ep *EthereumParser) IsSubscribed(address string) bool {
-	_, ok := ep.subscribed[address]
-	return ok
-}
-
-func (ep *EthereumParser) GetTransactions(address string, storage storage_interface.Storage) []*Transaction {
-	return storage.GetTransactions(address)
+func (ep *EthereumParser) GetTransactions(address string) []*Transaction {
+	return []*Transaction{}
 }

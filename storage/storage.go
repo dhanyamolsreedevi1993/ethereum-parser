@@ -18,7 +18,11 @@ func NewMemoryStorage() *MemoryStorage {
 }
 
 func (s *MemoryStorage) GetCurrentBlock() int {
-	return 0 // Not implemented in memory storage
+	return 0
+}
+
+func (s *MemoryStorage) Subscribe(address string) bool {
+	return true
 }
 
 func (s *MemoryStorage) GetTransactions(address string) []*parser.Transaction {
@@ -29,15 +33,16 @@ func (s *MemoryStorage) GetTransactions(address string) []*parser.Transaction {
 		return []*parser.Transaction{}
 	}
 
-	// Return a copy of the transactions to avoid modifying the original data
-	transactions := make([]*parser.Transaction, len(s.transactions[address]))
-	copy(transactions, s.transactions[address])
-	return transactions
+	return s.transactions[address]
 }
 
 func (s *MemoryStorage) SaveTransaction(address string, tx *parser.Transaction) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+
+	if _, ok := s.transactions[address]; !ok {
+		s.transactions[address] = []*parser.Transaction{}
+	}
 
 	s.transactions[address] = append(s.transactions[address], tx)
 }
