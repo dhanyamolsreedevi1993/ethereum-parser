@@ -1,5 +1,9 @@
 package parser
 
+import (
+	"sync"
+)
+
 type Transaction struct {
 	Hash     string
 	From     string
@@ -19,6 +23,7 @@ type EthereumParser struct {
 	currentBlock int
 	subscribed   map[string]bool
 	transactions map[string][]*Transaction
+	mu           sync.Mutex
 }
 
 func NewEthereumParser() *EthereumParser {
@@ -33,6 +38,13 @@ func (ep *EthereumParser) GetCurrentBlock() int {
 }
 
 func (ep *EthereumParser) Subscribe(address string) bool {
+	ep.mu.Lock()
+	defer ep.mu.Unlock()
+
+	if _, ok := ep.subscribed[address]; ok {
+		return false // Already subscribed
+	}
+
 	ep.subscribed[address] = true
 
 	// Add a dummy transaction for testing purposes
@@ -50,8 +62,13 @@ func (ep *EthereumParser) Subscribe(address string) bool {
 }
 
 func (ep *EthereumParser) GetTransactions(address string) []*Transaction {
+	ep.mu.Lock()
+	defer ep.mu.Unlock()
+
 	if !ep.subscribed[address] {
-		return nil
+		return nil // Address not subscribed
 	}
+
+	// Return transactions only if the address is subscribed
 	return ep.transactions[address]
 }

@@ -27,6 +27,7 @@ func StartServer(parserInstance *parser.EthereumParser, storageInstance *storage
 	http.HandleFunc("/transactions", handleTransactions)
 
 	log.Println("Starting server on :8080...")
+	log.Println("Please use POST /subscribe to subscribe an address and GET /transactions to fetch transactions for a subscribed address")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
@@ -50,7 +51,7 @@ func handleSubscribe(w http.ResponseWriter, r *http.Request) {
 
 	log.Printf("Subscribed to address: %s\n", address)
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Subscribed successfully"))
+	w.Write([]byte("Subscribed successfully. You can now get transactions for this address using GET /transactions?address=" + address))
 }
 
 func handleTransactions(w http.ResponseWriter, r *http.Request) {
@@ -67,7 +68,7 @@ func handleTransactions(w http.ResponseWriter, r *http.Request) {
 
 	transactions := ethereumParser.GetTransactions(address)
 	if transactions == nil {
-		http.Error(w, "Address not subscribed", http.StatusBadRequest)
+		http.Error(w, "Address not subscribed or no transactions available", http.StatusBadRequest)
 		return
 	}
 
