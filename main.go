@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/dhanyamolsreedevi1993/ethereum-parser/parser"
 	"github.com/dhanyamolsreedevi1993/ethereum-parser/restapi"
@@ -15,29 +16,18 @@ func main() {
 	rpcClient := rpc.NewEthereumRPCClient()
 	memoryStorage := storage.NewMemoryStorage()
 
-	// Simulate subscribing to an address
-	address := "0x1234567890abcdef"
-	fmt.Printf("Subscribing to address %s\n", address)
-	ethereumParser.Subscribe(address)
+	// Start REST API server to expose Ethereum parser functionality
+	go restapi.StartServer(ethereumParser, memoryStorage)
 
 	// Simulate fetching current block
 	currentBlock, err := getCurrentBlock(rpcClient)
 	if err != nil {
-		fmt.Printf("Error fetching block number: %v\n", err)
+		log.Printf("Error fetching block number: %v\n", err)
 		return
 	}
 	fmt.Printf("Current block: %d\n", currentBlock)
 
-	// Simulate fetching transactions for the subscribed address
-	transactions := ethereumParser.GetTransactions(address)
-	fmt.Printf("Transactions for address %s:\n", address)
-	for _, tx := range transactions {
-		fmt.Printf("Hash: %s, From: %s, To: %s, Value: %s, Gas: %s, GasPrice: %s\n",
-			tx.Hash, tx.From, tx.To, tx.Value, tx.Gas, tx.GasPrice)
-	}
-
-	// Start REST API server to expose Ethereum parser functionality
-	restapi.StartServer(ethereumParser, memoryStorage)
+	select {} // Keep the main function running
 }
 
 func getCurrentBlock(rpcClient *rpc.EthereumRPCClient) (int, error) {

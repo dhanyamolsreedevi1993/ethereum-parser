@@ -48,6 +48,7 @@ func handleSubscribe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	log.Printf("Subscribed to address: %s\n", address)
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Subscribed successfully"))
 }
@@ -64,13 +65,19 @@ func handleTransactions(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	transactions := memoryStorage.GetTransactions(address)
+	transactions := ethereumParser.GetTransactions(address)
+	if transactions == nil {
+		http.Error(w, "Address not subscribed", http.StatusBadRequest)
+		return
+	}
+
 	jsonResponse, err := json.Marshal(transactions)
 	if err != nil {
 		http.Error(w, "Failed to marshal transactions", http.StatusInternalServerError)
 		return
 	}
 
+	log.Printf("Transactions for address %s: %s\n", address, jsonResponse)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(jsonResponse)
